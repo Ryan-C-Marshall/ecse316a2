@@ -376,7 +376,7 @@ def main():
         filtered_fft_result_3 = compress(fft_result, proportion=proportions[2])
         filtered_fft_result_4 = compress(fft_result, proportion=proportions[3])
         filtered_fft_result_5 = compress(fft_result, proportion=proportions[4])
-        
+
         ifft_result_0 = inverse_fft_two_dimensions(fft_result, title="IFFT Original")
         ifft_result_1 = inverse_fft_two_dimensions(filtered_fft_result_1, title=f"IFFT {proportions[0]*100}%")
         ifft_result_2 = inverse_fft_two_dimensions(filtered_fft_result_2, title=f"IFFT {proportions[1]*100}%")
@@ -411,10 +411,10 @@ def experiment_2():
         raise FileNotFoundError("Image file 'moonlanding.png' not found.")
     
     fft_result = fft_two_dimensions(image)
-    fft_result_some_low_frequencies_removed = remove_low_frequencies(fft_result, proportion=0.75)
-    fft_result_most_low_frequencies_removed = remove_low_frequencies(fft_result, proportion=0.90)
-    fft_result_some_high_frequencies_removed = remove_high_frequencies(fft_result, proportion=0.75)
-    fft_result_most_high_frequencies_removed = remove_high_frequencies(fft_result, proportion=0.90)
+    fft_result_some_low_frequencies_removed = remove_low_frequencies(fft_result, proportion=0.5)
+    fft_result_most_low_frequencies_removed = remove_low_frequencies(fft_result, proportion=0.85)
+    fft_result_some_high_frequencies_removed = remove_high_frequencies(fft_result, proportion=0.5)
+    fft_result_most_high_frequencies_removed = remove_high_frequencies(fft_result, proportion=0.85)
 
     ifft_result = inverse_fft_two_dimensions(fft_result, title="IFFT Original")
     ifft_result_some_low_frequencies_removed = inverse_fft_two_dimensions(fft_result_some_low_frequencies_removed, title="IFFT Some Low Frequencies Removed")
@@ -422,11 +422,13 @@ def experiment_2():
     ifft_result_some_high_frequencies_removed = inverse_fft_two_dimensions(fft_result_some_high_frequencies_removed, title="IFFT Some High Frequencies Removed")
     ifft_result_most_high_frequencies_removed = inverse_fft_two_dimensions(fft_result_most_high_frequencies_removed, title="IFFT Most High Frequencies Removed")
 
-    display_images([image, np.real(ifft_result), np.real(ifft_result_some_low_frequencies_removed), np.real(ifft_result_most_low_frequencies_removed), np.real(ifft_result_some_high_frequencies_removed), np.real(ifft_result_most_high_frequencies_removed)], ['Original Image', 'Low Frequency Image', 'Most Low Frequency Image', 'High Frequency Image', 'Most High Frequency Image'], (2, 3))
+    display_images([image, np.real(ifft_result), np.real(ifft_result_some_low_frequencies_removed), np.real(ifft_result_most_low_frequencies_removed), np.real(ifft_result_some_high_frequencies_removed), np.real(ifft_result_most_high_frequencies_removed)], ['Original Image', 'IFFT No Changes', 'Low Frequencies Removed', 'Most Low Frequencies Removed', 'High Frequencies Removed', 'Most High Frequencies Removed'], (2, 3))
 
 # Experiment 3 is the same as mode 3 in main()
 
 # Experiment 4 is the same as mode 4 in main()
 
 if __name__ == "__main__":
-    main()
+    experiment_2()
+    
+    # main()
