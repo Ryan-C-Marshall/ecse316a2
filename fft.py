@@ -63,21 +63,9 @@ def compute_x_k_inverse(X: np.ndarray, k: int) -> complex:
 
 def inverse_fft_one_dimension(X: np.ndarray) -> np.ndarray:
     N = len(X)
-
-    x = np.zeros(shape=(N,), dtype=complex)
-
-    if N <= FFT_CUTOFF:
-        for k in range(N):
-            x[k] = compute_x_k_inverse(X, k)
-        return x
-    
-    even = inverse_fft_one_dimension(X[0::2].copy())
-    odd = inverse_fft_one_dimension(X[1::2].copy())
-
-    for k in range(N//2):
-        twiddle = np.exp(2j * np.pi * k / N) * odd[k % (N // 2)]
-        x[k] = (even[k] + twiddle) / N
-        x[k + N//2] = (even[k] - twiddle) / N
+    X_conj = np.conjugate(X)
+    x = fft_one_dimension(X_conj)
+    x = np.conjugate(x) / N
     return x
 
 def dft_two_dimensions(image: np.ndarray) -> np.ndarray:
@@ -125,14 +113,15 @@ def inverse_fft_two_dimensions(fourierTransformResult: fourierTransformResult2d,
     for j in range(N):
         print(f'\r{title}: {M+j+1}/{M+N}', end='', flush=True)
         ifft_result[:, j] = inverse_fft_one_dimension(ifft_temp[:, j])
+
     if fourierTransformResult.pad_x > 0:
-        ifft_result = ifft_result[:-fourierTransformResult.pad_x, :]
+            ifft_result = ifft_result[:-fourierTransformResult.pad_x, :]
     if fourierTransformResult.pad_y > 0:
         ifft_result = ifft_result[:, :-fourierTransformResult.pad_y]
 
     print(f"\r{title} complete.{' ' * 20}")
-    
-    return ifft_result / (M * N)
+
+    return ifft_result
 
 def remove_high_frequencies(fourierTransformResult: fourierTransformResult2d, proportion: float) -> fourierTransformResult2d:
     new_ft_result = fourierTransformResult2d(fourierTransformResult.X.copy(), fourierTransformResult.pad_x, fourierTransformResult.pad_y)
@@ -246,50 +235,53 @@ def zero_pad_to_power_of_two_2d(image: np.ndarray) -> tuple[np.ndarray, tuple[in
     return padded_image, (next_power_of_two_M - M, next_power_of_two_N - N)
 
 def test_time_complexity():
-    sizes = [2**i for i in range(1, 9)]
-    dft_times = [[] for _ in range(len(sizes))]
-    dft_means = []
-    dft_stddevs = []
-    fft_times = [[] for _ in range(len(sizes))]
-    fft_means = []
-    fft_stddevs = []
+    sizes = [2**i for i in range(5, 9)]
 
-    for i in range(len(sizes)):
-        for run in range(10):
-            x = np.random.rand(sizes[i]).astype(np.float32)
-    
-            time0 = time.time()
-            dft_one_dimension(x)
-            time1 = time.time()
-            dft_times[i].append(time1 - time0)
+    dft_means, fft_means = [], []
+    dft_stddevs, fft_stddevs = [], []
 
-            time0 = time.time()
-            fft_one_dimension(x)
-            time1 = time.time()
-            fft_times[i].append(time1 - time0)
-        
-        dft_means.append(np.mean(dft_times[i]))
-        fft_means.append(np.mean(fft_times[i]))
-        dft_stddevs.append(np.std(dft_times[i]))
-        fft_stddevs.append(np.std(fft_times[i]))
+    for N in sizes:
+        dft_times, fft_times = [], []
 
-        print(f"Size {sizes[i]}: DFT mean time {dft_means[-1]:.6f}s, FFT mean time {fft_means[-1]:.6f}s")
-        print(f"Size {sizes[i]}: DFT variance {np.square(dft_stddevs[-1]):.6f}, FFT variance {np.square(fft_stddevs[-1]):.6f}")
-        print("\n")
+        for _ in range(10):
+            img = np.random.rand(N, N).astype(np.float32)
 
-    # Plot means with error bars = 2 * standard deviation
-    dft_means = np.array(dft_means)
-    fft_means = np.array(fft_means)
-    dft_err = 2 * np.array(dft_stddevs)
-    fft_err = 2 * np.array(fft_stddevs)
+            t0 = time.time()
+            dft_two_dimensions(img)
+            t1 = time.time()
+            dft_times.append(t1 - t0)
 
-    plt.errorbar(sizes, dft_means, yerr=dft_err, label='DFT Mean Time', marker='o', capsize=4)
-    plt.errorbar(sizes, fft_means, yerr=fft_err, label='FFT Mean Time', marker='o', capsize=4)
+            t0 = time.time()
+            fft_two_dimensions(img)
+            t1 = time.time()
+            fft_times.append(t1 - t0)
+
+        dft_means.append(np.mean(dft_times))
+        fft_means.append(np.mean(fft_times))
+        dft_stddevs.append(np.std(dft_times))
+        fft_stddevs.append(np.std(fft_times))
+
+        print(
+            f"N={N}: "
+            f"DFT mean={dft_means[-1]:.6f}s, FFT mean={fft_means[-1]:.6f}s | "
+            f"DFT variance={dft_stddevs[-1]**2:.6f}s², FFT variance={fft_stddevs[-1]**2:.6f}s²"
+        )
+
+    print("\n===== Runtime Summary =====")
+    print(f"{'Size(N)':>8} | {'DFT mean':>10} | {'FFT mean':>10} | {'DFT var':>10} | {'FFT var':>10}")
+    print("-" * 60)
+    for i, N in enumerate(sizes):
+        print(f"{N:8} | {dft_means[i]:10.6f} | {fft_means[i]:10.6f} | {dft_stddevs[i]**2:10.6f} | {fft_stddevs[i]**2:10.6f}")
+    print("=" * 60)
+
+    sizes = np.array(sizes)
+    plt.errorbar(sizes, dft_means, yerr=2*np.array(dft_stddevs), label="2D DFT", marker='o')
+    plt.errorbar(sizes, fft_means, yerr=2*np.array(fft_stddevs), label="2D FFT", marker='o')
     plt.xscale('log', base=2)
     plt.yscale('log')
-    plt.xlabel('Input Size (N)')
-    plt.ylabel('Time (seconds)')
-    plt.title('DFT vs FFT Time Complexity')
+    plt.xlabel("Side length (N)")
+    plt.ylabel("Time (seconds)")
+    plt.title("2D DFT vs 2D FFT – Time Complexity")
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -359,8 +351,15 @@ def main():
 
         ifft_result = inverse_fft_two_dimensions(filtered_fft_result)
 
-        print(f"{DEFAULT_DENOISING_PROPORTION*100}% of frequencies removed for denoising.")
-        print(f"{int(DEFAULT_DENOISING_PROPORTION*filtered_fft_result.X.size)} / {filtered_fft_result.X.size} frequency components set to zero.")
+        total_coeffs = filtered_fft_result.X.size
+        nonzero_coeffs = np.count_nonzero(filtered_fft_result.X)
+        fraction_nonzero = nonzero_coeffs / total_coeffs
+
+        print("Denoising statistics:")
+        print(f"Non-zero frequency components: {nonzero_coeffs} / {total_coeffs} "
+              f"({fraction_nonzero:.4f} of original spectrum)")
+        print(f"Zeroed components: {total_coeffs - nonzero_coeffs} "
+              f"({1 - fraction_nonzero:.4f} of original spectrum)")
 
         display_images([image, np.real(ifft_result)], ['Original Image', 'Denoised Image'], (1, 2))
 
@@ -384,12 +383,26 @@ def main():
         ifft_result_4 = inverse_fft_two_dimensions(filtered_fft_result_4, title=f"IFFT {proportions[3]*100}%")
         ifft_result_5 = inverse_fft_two_dimensions(filtered_fft_result_5, title=f"IFFT {proportions[4]*100}%")
 
-        for proportion in proportions:
-            print(f"Compression {proportion*100}%: {int(proportion*fft_result.X.size)} / {fft_result.X.size} frequency components set to zero.")
-        
-        display_images([np.real(ifft_result_0), np.real(ifft_result_1), np.real(ifft_result_2), np.real(ifft_result_3), np.real(ifft_result_4), np.real(ifft_result_5)], 
-                       [f'Original', f'{proportions[0]*100}% compressed', f'{proportions[1]*100}%', f'{proportions[2]*100}%', f'{proportions[3]*100}%', f'{proportions[4]*100}%'], 
-                       (2, 3))
+        spectra = [
+            ("Original (0% zeroed)", fft_result),
+            (f"{proportions[0]*100:.1f}% zeroed", filtered_fft_result_1),
+            (f"{proportions[1]*100:.1f}% zeroed", filtered_fft_result_2),
+            (f"{proportions[2]*100:.1f}% zeroed", filtered_fft_result_3),
+            (f"{proportions[3]*100:.1f}% zeroed", filtered_fft_result_4),
+            (f"{proportions[4]*100:.1f}% zeroed", filtered_fft_result_5),
+        ]
+
+        print("Compression statistics:")
+        for label, ft in spectra:
+            total = ft.X.size
+            nonzero = np.count_nonzero(ft.X)
+            frac = nonzero / total
+            print(f"{label}: non-zero = {nonzero} / {total} ({frac:.4f}), "
+                  f"zeroed = {total - nonzero} ({1 - frac:.4f})")
+
+        display_images([np.real(ifft_result_0), np.real(ifft_result_1), np.real(ifft_result_2), np.real(ifft_result_3), np.real(ifft_result_4), np.real(ifft_result_5)],
+                           [f'Original', f'{proportions[0]*100}% compressed', f'{proportions[1]*100}%', f'{proportions[2]*100}%', f'{proportions[3]*100}%', f'{proportions[4]*100}%'],
+                           (2, 3))
 
     
     elif mode == 4:
@@ -429,6 +442,6 @@ def experiment_2():
 # Experiment 4 is the same as mode 4 in main()
 
 if __name__ == "__main__":
-    experiment_2()
+    # experiment_2()
     
-    # main()
+    main()
