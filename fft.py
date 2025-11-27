@@ -115,7 +115,7 @@ def inverse_fft_two_dimensions(fourierTransformResult: fourierTransformResult2d,
         ifft_result[:, j] = inverse_fft_one_dimension(ifft_temp[:, j])
 
     if fourierTransformResult.pad_x > 0:
-            ifft_result = ifft_result[:-fourierTransformResult.pad_x, :]
+        ifft_result = ifft_result[:-fourierTransformResult.pad_x, :]
     if fourierTransformResult.pad_y > 0:
         ifft_result = ifft_result[:, :-fourierTransformResult.pad_y]
 
