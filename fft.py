@@ -310,14 +310,21 @@ def log_plot_spectrum(spectrum: np.ndarray) -> np.ndarray:
     return magnitude_spectrum
 
 def display_images(images: list[np.ndarray], titles: list[str], plot_size: tuple[int, int]) -> None:
-    # Display images in a grid specified by plot_size
     rows, cols = plot_size
     plt.figure(figsize=(3 * cols, 3 * rows))
+
     for i in range(len(images)):
         plt.subplot(rows, cols, i + 1)
-        plt.imshow(images[i], cmap='gray')
+        img = images[i]
+
+        im = plt.imshow(img, cmap='gray')
         plt.title(titles[i])
         plt.axis('off')
+
+        if "FFT" in titles[i]:
+            plt.colorbar(im, label='Log Magnitude')
+
+    plt.tight_layout()
     plt.show()
     
 
