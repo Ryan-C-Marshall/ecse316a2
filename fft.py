@@ -321,7 +321,7 @@ def display_images(images: list[np.ndarray], titles: list[str], plot_size: tuple
         plt.title(titles[i])
         plt.axis('off')
 
-        if "FFT" in titles[i]:
+        if "fft spectrum" in titles[i].lower():
             plt.colorbar(im, label='Log Magnitude')
 
     plt.tight_layout()
@@ -442,7 +442,7 @@ def experiment_2():
     ifft_result_some_high_frequencies_removed = inverse_fft_two_dimensions(fft_result_some_high_frequencies_removed, title="IFFT Some High Frequencies Removed")
     ifft_result_most_high_frequencies_removed = inverse_fft_two_dimensions(fft_result_most_high_frequencies_removed, title="IFFT Most High Frequencies Removed")
 
-    display_images([image, np.real(ifft_result), np.real(ifft_result_some_low_frequencies_removed), np.real(ifft_result_most_low_frequencies_removed), np.real(ifft_result_some_high_frequencies_removed), np.real(ifft_result_most_high_frequencies_removed)], ['Original Image', 'IFFT No Changes', 'Low Frequencies Removed', 'Most Low Frequencies Removed', 'High Frequencies Removed', 'Most High Frequencies Removed'], (2, 3))
+    display_images([image, np.real(ifft_result), np.real(ifft_result_some_low_frequencies_removed), np.real(ifft_result_most_low_frequencies_removed), np.real(ifft_result_some_high_frequencies_removed), np.real(ifft_result_most_high_frequencies_removed)], ['Original Image', 'IFFT No Changes', 'Some Low Frequencies Removed', 'Most Low Frequencies Removed', 'Some High Frequencies Removed', 'Most High Frequencies Removed'], (2, 3))
 
 # Experiment 3 is the same as mode 3 in main()
 
