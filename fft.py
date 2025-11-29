@@ -123,6 +123,8 @@ def inverse_fft_two_dimensions(fourierTransformResult: fourierTransformResult2d,
 
     return ifft_result
 
+import numpy as np
+
 def remove_high_frequencies(fourierTransformResult: fourierTransformResult2d, proportion: float) -> fourierTransformResult2d:
     new_ft_result = fourierTransformResult2d(fourierTransformResult.X.copy(), fourierTransformResult.pad_x, fourierTransformResult.pad_y)
     X = new_ft_result.X
@@ -144,7 +146,7 @@ def remove_high_frequencies(fourierTransformResult: fourierTransformResult2d, pr
 def compress(fourierTransformResult: fourierTransformResult2d, proportion: float) -> fourierTransformResult2d:
     print("Compressing with proportion:", proportion)
 
-    base_proportion = 0.5
+    base_proportion = 0.85
 
     if proportion <= base_proportion:
         return remove_high_frequencies(fourierTransformResult, proportion)
