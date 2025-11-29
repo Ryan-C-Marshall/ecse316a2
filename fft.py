@@ -289,7 +289,7 @@ def test_time_complexity():
 def take_command_line_arguments():
     parser = argparse.ArgumentParser(description='FFT and IFFT on images.')
 
-    # Calling syntax: python a2.py [-m mode] [-i image]
+    # Calling syntax: python fft.py [-m mode] [-i image]
     parser.add_argument('-m', '--mode',
                         type=int,
                         choices=[1, 2, 3, 4],
